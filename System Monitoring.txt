@@ -1,0 +1,256 @@
+import java.awt.*;
+import java.io.File
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
+import java.net.*;
+
+public class SystemInfoGUI extends JFrame 
+{
+    private JTabbedPane tabbedPane;
+    private JPanel systemInfoPanel, cpuInfoPanel, driveInfoPanel, memoryInfoPanel, networkInfoPanel;
+
+public SystemInfoGUI() 
+{
+        setTitle("System Monitoring");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(900, 900);
+        setLocationRelativeTo(null);
+
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        
+        systemInfoPanel = createSystemInfoPanel();
+        tabbedPane.addTab("System", null, systemInfoPanel, "View system information");
+
+        
+        cpuInfoPanel = createCPUInfoPanel();
+        tabbedPane.addTab("CPU", null, cpuInfoPanel, "View CPU information");
+
+        
+        driveInfoPanel = createDriveInfoPanel();
+        tabbedPane.addTab("Drive", null, driveInfoPanel, "View drive information");
+
+        
+        memoryInfoPanel = createMemoryInfoPanel();
+        tabbedPane.addTab("Memory", null, memoryInfoPanel, "View memory information");
+
+        
+        networkInfoPanel = createNetworkInfoPanel();
+        tabbedPane.addTab("Network", null, networkInfoPanel, "View network information");
+
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+private JPanel createSystemInfoPanel()
+{
+JPanel panel = new JPanel(new GridLayout(5, 2, 5, 5));
+Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
+panel.add(createLabel("Operating System:", font));
+panel.add(createLabel(System.getProperty("os.name") + " " +    System.getProperty("os.version"), font));
+panel.add(createLabel("System Directory:", font));
+panel.add(createLabel(System.getProperty("user.dir"), font));
+panel.add(createLabel("Process Count:", font));
+panel.add(createLabel(String.valueOf(Runtime.getRuntime().availableProcessors()), font));
+panel.add(createLabel("User Name:", font));
+panel.add(createLabel(System.getProperty("user.name"), font));
+panel.add(createLabel("Logical Drives:", font));
+panel.add(createLabel(getLogicalDrives(), font));
+return panel;
+}
+
+    private JPanel createCPUInfoPanel() 
+    {
+        JPanel panel = new JPanel(new GridLayout(4, 2, 5, 5));
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
+        panel.add(createLabel("Architecture:", font));
+        panel.add(createLabel(System.getProperty("os.arch"), font));
+        panel.add(createLabel("Data Width:", font));
+        panel.add(createLabel(System.getProperty("sun.arch.data.model"), font));
+        panel.add(createLabel("CPU Model:", font));
+        panel.add(createLabel(System.getenv("PROCESSOR_IDENTIFIER"), font));
+        panel.add(createLabel("CPU Speed:", font));
+        panel.add(createLabel(System.getenv("PROCESSOR_SPEED") + " MHz", font));
+        return panel;
+    }
+
+    private JPanel createDriveInfoPanel()
+    {
+        JPanel panel = new JPanel(new GridLayout(0, 2, 5, 5));
+        File[] roots = File.listRoots();
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
+        FileSystemView fileSystemView = FileSystemView.getFileSystemView();
+
+        for (File root : roots)
+        {
+            if (fileSystemView.isDrive(root) && root.canRead()) {
+                panel.add(createLabel("Drive Name:", font));
+                panel.add(createLabel(root.toString(), font));
+                panel.add(createLabel("Media Type:", font));
+                panel.add(createLabel(fileSystemView.getSystemTypeDescription(root), font));
+                panel.add(createLabel("Size:", font));
+                panel.add(createLabel(formatSize(root.getTotalSpace()), font));
+                panel.add(createLabel("File System:", font));
+                panel.add(createLabel(fileSystemView.getSystemDisplayName(root), font));
+                panel.add(createLabel("Free Space:", font));
+                panel.add(createLabel(formatSize(root.getFreeSpace()), font));
+                panel.add(new JLabel("")); // Separator
+                panel.add(new JLabel("")); // Separator
+            }
+        }
+        return panel;
+    }
+
+    private JPanel createMemoryInfoPanel()
+    {
+        JPanel panel = new JPanel(new GridLayout(3, 2, 5, 5));
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
+        Runtime runtime = Runtime.getRuntime();
+        panel.add(createLabel("System Memory Space:", font));
+        panel.add(createLabel(formatSize(runtime.totalMemory()), font));
+        panel.add(createLabel("System Memory Usage:", font));
+        panel.add(createLabel(formatSize(runtime.totalMemory() - runtime.freeMemory()), font));
+        panel.add(createLabel("System Available Space:", font));
+        panel.add(createLabel(formatSize(runtime.freeMemory()), font));
+        return panel;
+    }
+
+    private JPanel createNetworkInfoPanel() 
+    {
+        JPanel panel = new JPanel(new GridLayout(6, 2, 5, 5));
+        Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 18);
+        
+        panel.add(createLabel("Host Name:", font));
+        panel.add(createLabel(getHostName(), font));
+        panel.add(createLabel("IP Address:", font));
+        panel.add(createLabel(getIPAddress(), font));
+        panel.add(createLabel("MAC Address:", font));
+        panel.add(createLabel(getMACAddress(), font));
+        panel.add(createLabel("Network Interface Name:", font));
+        panel.add(createLabel(getNetworkInterfaceName(), font));
+        panel.add(createLabel("Connection Status:", font));
+        panel.add(createLabel(getConnectionStatus(), font));
+
+        return panel;
+    }
+
+    private JLabel createLabel(String text, Font font) 
+    {
+        JLabel label = new JLabel(text);
+        label.setFont(font);
+        return label;
+    }
+
+    private String formatSize(long size)
+    {
+        if (size < 1024) return size + " bytes";
+        if (size < 1024 * 1024) return (size / 1024) + " KB";
+        if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)) + " MB";
+        return (size / (1024 * 1024 * 1024)) + " GB";
+    }
+
+    private String getLogicalDrives()
+    {
+        StringBuilder driveList = new StringBuilder();
+        for (File drive : File.listRoots())
+        {
+            driveList.append(drive.toString()).append(" ");
+        }
+        return driveList.toString();
+    }
+
+    private String getHostName() 
+    {
+        try
+        {
+            return InetAddress.getLocalHost().getHostName();
+        } 
+        catch (Exception e)
+        {
+            return "Unknown";
+        }
+    }
+
+    private String getIPAddress() 
+    {
+        try 
+        {
+            return InetAddress.getLocalHost().getHostAddress();
+        } 
+        catch (Exception e)
+        {
+            return "Unknown";
+        }
+    }
+
+    private String getMACAddress()
+    {
+        try 
+        {
+            InetAddress localHost = InetAddress.getLocalHost();
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
+            byte[] mac = networkInterface.getHardwareAddress();
+            if (mac != null)
+            {
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < mac.length; i++)
+                {
+                    sb.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? "-" : ""));
+                }
+                return sb.toString();
+            } 
+            else 
+            {
+                return "Unknown";
+            }
+        } 
+        catch (Exception e)
+        {
+            return "Unknown";
+        }
+    }
+
+    private String getNetworkInterfaceName() 
+    {
+        try
+        {
+            InetAddress localHost = InetAddress.getLocalHost();
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
+            return networkInterface.getDisplayName();
+        } 
+        catch (Exception e) 
+        {
+            return "Unknown";
+        }
+    }
+
+    private String getConnectionStatus()
+    {
+        try
+        {
+            InetAddress localHost = InetAddress.getLocalHost();
+            NetworkInterface networkInterface = NetworkInterface.getByInetAddress(localHost);
+            return networkInterface.isUp() ? "Connected" : "Disconnected";
+        }
+        catch (Exception e)
+        {
+            return "Unknown";
+        }
+    }
+
+    public static void main(String[] args)
+    {
+        SwingUtilities.invokeLater(() -> new SystemInfoGUI().setVisible(true));
+    }
+}
+
+
+
+
+
+
+
+
+
